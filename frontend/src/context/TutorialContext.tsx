@@ -23,7 +23,7 @@ export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children, ph
     const [error, setError] = useState<string | null>(null)
 
     // Backend API URL
-    const API_BASE_URL = 'http://localhost:5001/api'
+    const API_BASE_URL = 'https://rider-onboarding.onrender.com/api'
 
     // Load tutorials
     useEffect(() => {
