@@ -13,5 +13,5 @@ export default defineConfig({
         sourcemap: true,
         minify: 'terser'
     },
-    base: process.env.NODE_ENV === 'production' ? '/rider_onboarding/' : '/'
+    base: '/rider_onboarding/',
 }) 
