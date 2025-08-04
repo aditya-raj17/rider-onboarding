@@ -51,51 +51,6 @@ const tutorials = [
         content: "Always greet customers with a smile and maintain a professional demeanor. Be punctual and communicate clearly about delivery times. Handle complaints gracefully and escalate issues when necessary. Remember, you are the face of our company to customers.",
         estimatedTime: "4 minutes",
         order: 4
-    },
-    {
-        id: 5,
-        title: "Final Assessment",
-        description: "Complete a quick quiz to finish your training",
-        type: "quiz",
-        content: {
-            questions: [
-                {
-                    id: 1,
-                    question: "What should you do if a customer is not available for delivery?",
-                    options: [
-                        "Leave the package at the door",
-                        "Call the customer and wait 5 minutes",
-                        "Return the package to the warehouse",
-                        "Try again the next day"
-                    ],
-                    correctAnswer: 1
-                },
-                {
-                    id: 2,
-                    question: "What is the most important safety rule?",
-                    options: [
-                        "Wear comfortable shoes",
-                        "Follow traffic rules",
-                        "Use your phone while driving",
-                        "Skip safety equipment"
-                    ],
-                    correctAnswer: 1
-                },
-                {
-                    id: 3,
-                    question: "How should you handle customer complaints?",
-                    options: [
-                        "Ignore them",
-                        "Argue with the customer",
-                        "Listen patiently and escalate if needed",
-                        "Hang up immediately"
-                    ],
-                    correctAnswer: 2
-                }
-            ]
-        },
-        estimatedTime: "3 minutes",
-        order: 5
     }
 ];
 
