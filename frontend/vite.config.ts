@@ -13,5 +13,5 @@ export default defineConfig({
         sourcemap: true,
         minify: 'terser'
     },
-    base: '/rider-onboarding/',
+    base: '/rider-onboarding/'
 }) 
