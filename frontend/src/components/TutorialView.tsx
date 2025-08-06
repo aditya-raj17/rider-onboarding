@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTutorial } from '../context/TutorialContext'
 import { TutorialViewProps, Tutorial, QuizContent } from '../types'
-import PullToRefresh from './PullToRefresh'
 import {
     ArrowLeft,
     ArrowRight,
@@ -18,8 +17,7 @@ const TutorialView: React.FC<TutorialViewProps> = ({ onLogout }) => {
         tutorials,
         progress,
         phoneNumber,
-        saveProgress,
-        isTrainingComplete
+        saveProgress
     } = useTutorial()
 
     const [currentTutorial, setCurrentTutorial] = useState<Tutorial | null>(null)
@@ -49,12 +47,8 @@ const TutorialView: React.FC<TutorialViewProps> = ({ onLogout }) => {
             if (success) {
                 setIsCompleted(true)
 
-                // If this is the last tutorial, navigate to completion
-                if (isTrainingComplete()) {
-                    setTimeout(() => {
-                        navigate('/completion')
-                    }, 1500)
-                }
+                // If this is the last tutorial, just show completion message
+                // The completion message will be shown on the tutorial list page
             }
         } catch (error) {
             console.error('Error completing tutorial:', error)
@@ -73,8 +67,6 @@ const TutorialView: React.FC<TutorialViewProps> = ({ onLogout }) => {
             handleComplete()
         }
     }
-
-
 
     const handleQuizAnswer = (questionId: number, answerIndex: number): void => {
         setQuizAnswers(prev => ({
@@ -102,19 +94,19 @@ const TutorialView: React.FC<TutorialViewProps> = ({ onLogout }) => {
 
         // Auto-complete if score is 80% or higher
         if (score >= 80) {
-            setTimeout(() => {
-                handleComplete()
-            }, 2000)
+            handleComplete()
         }
     }
 
     const getNextTutorial = (): Tutorial | undefined => {
-        const currentIndex = tutorials.findIndex(t => t.id.toString() === id)
+        if (!currentTutorial) return undefined
+        const currentIndex = tutorials.findIndex(t => t.id === currentTutorial.id)
         return tutorials[currentIndex + 1]
     }
 
     const getPreviousTutorial = (): Tutorial | undefined => {
-        const currentIndex = tutorials.findIndex(t => t.id.toString() === id)
+        if (!currentTutorial) return undefined
+        const currentIndex = tutorials.findIndex(t => t.id === currentTutorial.id)
         return tutorials[currentIndex - 1]
     }
 
@@ -122,23 +114,14 @@ const TutorialView: React.FC<TutorialViewProps> = ({ onLogout }) => {
         const nextTutorial = getNextTutorial()
         if (nextTutorial) {
             navigate(`/tutorial/${nextTutorial.id}`)
-        } else {
-            navigate('/tutorials')
         }
     }
 
     const handlePrevious = (): void => {
-        const prevTutorial = getPreviousTutorial()
-        if (prevTutorial) {
-            navigate(`/tutorial/${prevTutorial.id}`)
-        } else {
-            navigate('/tutorials')
+        const previousTutorial = getPreviousTutorial()
+        if (previousTutorial) {
+            navigate(`/tutorial/${previousTutorial.id}`)
         }
-    }
-
-    const handleRefresh = async (): Promise<void> => {
-        // This will trigger a reload of the current tutorial
-        window.location.reload()
     }
 
     if (!currentTutorial) {
@@ -159,7 +142,6 @@ const TutorialView: React.FC<TutorialViewProps> = ({ onLogout }) => {
                 const isYouTube = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')
 
                 if (isYouTube) {
-                    // Extract YouTube video ID
                     const getYouTubeVideoId = (url: string): string => {
                         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
                         const match = url.match(regExp)
@@ -167,78 +149,84 @@ const TutorialView: React.FC<TutorialViewProps> = ({ onLogout }) => {
                     }
 
                     const videoId = getYouTubeVideoId(videoUrl)
-                    const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`
+                    const embedUrl = `https://www.youtube.com/embed/${videoId}`
 
                     return (
-                        <div className="tutorial-content">
-                            <div style={{ position: 'relative' }}>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <div style={{
+                                position: 'relative',
+                                width: '100%',
+                                paddingBottom: '56.25%', // 16:9 aspect ratio
+                                borderRadius: '0.5rem',
+                                overflow: 'hidden'
+                            }}>
                                 <iframe
                                     src={embedUrl}
                                     title={currentTutorial.title}
                                     style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
                                         width: '100%',
-                                        height: '315px',
-                                        border: 'none',
-                                        borderRadius: '0.5rem'
+                                        height: '100%',
+                                        border: 'none'
                                     }}
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
                                 />
-                                <div style={{
-                                    marginTop: '1rem',
-                                    padding: '1rem',
-                                    backgroundColor: 'var(--background-color)',
-                                    borderRadius: '0.5rem',
-                                    textAlign: 'center'
+                            </div>
+                            <div style={{
+                                padding: '1rem',
+                                backgroundColor: 'var(--warning-color)',
+                                borderRadius: '0.5rem',
+                                marginTop: '1rem'
+                            }}>
+                                <p style={{
+                                    margin: 0,
+                                    fontSize: '0.875rem',
+                                    color: 'var(--text-primary)'
                                 }}>
-                                    <p style={{
-                                        fontSize: '0.875rem',
-                                        color: 'var(--text-secondary)',
-                                        margin: 0
-                                    }}>
-                                        ⚠️ YouTube videos don't support automatic progress tracking.
-                                        Please watch the entire video and mark as complete manually.
-                                    </p>
-                                </div>
+                                    <strong>Note:</strong> For YouTube videos, please manually mark as complete after watching.
+                                </p>
                             </div>
                         </div>
                     )
                 } else {
-                    // Regular video file
                     return (
-                        <div className="tutorial-content">
-                            <div style={{ position: 'relative' }}>
-                                <video
-                                    src={videoUrl}
-                                    controls
-                                    onTimeUpdate={handleVideoProgress}
-                                    style={{ width: '100%', borderRadius: '0.5rem' }}
-                                />
-                                <div className="progress-bar" style={{ marginTop: '1rem' }}>
-                                    <div
-                                        className="progress-fill"
-                                        style={{ width: `${videoProgress}%` }}
-                                    ></div>
-                                </div>
-                                <p style={{
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <video
+                                controls
+                                style={{
+                                    width: '100%',
+                                    borderRadius: '0.5rem'
+                                }}
+                                onTimeUpdate={handleVideoProgress}
+                            >
+                                <source src={videoUrl} type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
+                            {videoProgress > 0 && (
+                                <div style={{
+                                    marginTop: '0.5rem',
                                     fontSize: '0.875rem',
-                                    color: 'var(--text-secondary)',
-                                    marginTop: '0.5rem'
+                                    color: 'var(--text-secondary)'
                                 }}>
-                                    {Math.round(videoProgress)}% watched
-                                </p>
-                            </div>
+                                    Progress: {Math.round(videoProgress)}%
+                                </div>
+                            )}
                         </div>
                     )
                 }
 
             case 'image':
                 return (
-                    <div className="tutorial-content">
+                    <div style={{ marginBottom: '1.5rem' }}>
                         <img
                             src={currentTutorial.content as string}
                             alt={currentTutorial.title}
-                            style={{ width: '100%', borderRadius: '0.5rem' }}
+                            style={{
+                                width: '100%',
+                                borderRadius: '0.5rem'
+                            }}
                         />
                     </div>
                 )
@@ -246,10 +234,10 @@ const TutorialView: React.FC<TutorialViewProps> = ({ onLogout }) => {
             case 'quiz':
                 const quizContent = currentTutorial.content as QuizContent
                 return (
-                    <div className="tutorial-content">
+                    <div style={{ marginBottom: '1.5rem' }}>
                         {!quizSubmitted ? (
                             <div>
-                                {quizContent.questions.map((question, index) => (
+                                {quizContent.questions.map((question, questionIndex) => (
                                     <div key={question.id} style={{ marginBottom: '2rem' }}>
                                         <h4 style={{
                                             fontSize: '1rem',
@@ -257,22 +245,21 @@ const TutorialView: React.FC<TutorialViewProps> = ({ onLogout }) => {
                                             color: 'var(--text-primary)',
                                             marginBottom: '1rem'
                                         }}>
-                                            {index + 1}. {question.question}
+                                            {questionIndex + 1}. {question.question}
                                         </h4>
-                                        <div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                             {question.options.map((option, optionIndex) => (
                                                 <label
                                                     key={optionIndex}
                                                     style={{
-                                                        display: 'block',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
                                                         padding: '0.75rem',
                                                         border: '1px solid var(--border-color)',
                                                         borderRadius: '0.5rem',
-                                                        marginBottom: '0.5rem',
                                                         cursor: 'pointer',
-                                                        backgroundColor: quizAnswers[question.id] === optionIndex ? 'var(--primary-color)' : 'var(--surface-color)',
-                                                        color: quizAnswers[question.id] === optionIndex ? 'white' : 'var(--text-primary)',
-                                                        transition: 'all 0.2s ease-in-out'
+                                                        backgroundColor: quizAnswers[question.id] === optionIndex ? 'var(--primary-color)' : 'transparent',
+                                                        color: quizAnswers[question.id] === optionIndex ? 'white' : 'var(--text-primary)'
                                                     }}
                                                 >
                                                     <input
@@ -298,60 +285,44 @@ const TutorialView: React.FC<TutorialViewProps> = ({ onLogout }) => {
                                 </button>
                             </div>
                         ) : (
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{
-                                    fontSize: '3rem',
-                                    fontWeight: 'bold',
-                                    color: quizScore >= 80 ? 'var(--success-color)' : 'var(--error-color)',
-                                    marginBottom: '1rem'
-                                }}>
-                                    {quizScore}%
-                                </div>
-                                <h3 style={{
-                                    fontSize: '1.25rem',
-                                    fontWeight: '600',
-                                    color: 'var(--text-primary)',
-                                    marginBottom: '0.5rem'
-                                }}>
-                                    {quizScore >= 80 ? 'Great job!' : 'Keep practicing!'}
-                                </h3>
-                                <p style={{
-                                    color: 'var(--text-secondary)',
-                                    marginBottom: '1rem'
-                                }}>
-                                    {quizScore >= 80
-                                        ? 'You passed the quiz and can continue to the next tutorial.'
-                                        : 'You need to score at least 80% to pass. Please review the material and try again.'
-                                    }
+                            <div style={{
+                                padding: '1.5rem',
+                                backgroundColor: quizScore >= 80 ? 'var(--success-color)' : 'var(--error-color)',
+                                borderRadius: '0.5rem',
+                                color: 'white',
+                                textAlign: 'center'
+                            }}>
+                                <h4 style={{ marginBottom: '0.5rem' }}>
+                                    Quiz {quizScore >= 80 ? 'Passed!' : 'Failed'}
+                                </h4>
+                                <p style={{ margin: 0 }}>
+                                    Your score: {quizScore}% ({Math.round((quizScore / 100) * quizContent.questions.length)} out of {quizContent.questions.length} correct)
                                 </p>
-                                {quizScore >= 80 && (
-                                    <div className="success-message">
-                                        <CheckCircle size={20} style={{ marginRight: '0.5rem' }} />
-                                        Tutorial completed successfully!
-                                    </div>
+                                {quizScore < 80 && (
+                                    <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                                        You need 80% or higher to pass. Please try again.
+                                    </p>
                                 )}
                             </div>
                         )}
                     </div>
                 )
 
-            default: // text
+            default:
                 return (
-                    <div className="tutorial-content">
-                        <div style={{
-                            lineHeight: '1.7',
-                            fontSize: '1rem',
-                            color: 'var(--text-primary)'
-                        }}>
-                            {currentTutorial.content as string}
-                        </div>
+                    <div style={{
+                        marginBottom: '1.5rem',
+                        lineHeight: '1.6',
+                        color: 'var(--text-primary)'
+                    }}>
+                        {currentTutorial.content as string}
                     </div>
                 )
         }
     }
 
     return (
-        <PullToRefresh onRefresh={handleRefresh}>
+        <>
             <header className="header">
                 <div className="header-content">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -486,7 +457,7 @@ const TutorialView: React.FC<TutorialViewProps> = ({ onLogout }) => {
                     )}
                 </div>
             </div>
-        </PullToRefresh>
+        </>
     )
 }
 

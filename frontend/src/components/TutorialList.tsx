@@ -2,7 +2,6 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTutorial } from '../context/TutorialContext'
 import { TutorialListProps } from '../types'
-import PullToRefresh from './PullToRefresh'
 import {
     Video,
     Image,
@@ -53,11 +52,6 @@ const TutorialList: React.FC<TutorialListProps> = ({ onLogout }) => {
         navigate(`/tutorial/${tutorial.id}`)
     }
 
-    const handleRefresh = async (): Promise<void> => {
-        // This will trigger a reload of tutorials and progress
-        window.location.reload()
-    }
-
     if (loading) {
         return (
             <div className="page-container">
@@ -80,7 +74,7 @@ const TutorialList: React.FC<TutorialListProps> = ({ onLogout }) => {
     }
 
     return (
-        <PullToRefresh onRefresh={handleRefresh}>
+        <>
             <header className="header">
                 <div className="header-content">
                     <div>
@@ -105,33 +99,33 @@ const TutorialList: React.FC<TutorialListProps> = ({ onLogout }) => {
                             <h2 style={{
                                 fontSize: '1.25rem',
                                 fontWeight: '600',
-                                color: 'var(--text-primary)'
+                                color: 'var(--text-primary)',
+                                margin: 0
                             }}>
-                                Your Progress
+                                Progress Overview
                             </h2>
-                            <span style={{
-                                fontSize: '1rem',
-                                fontWeight: '500',
-                                color: 'var(--primary-color)'
+                            <div style={{
+                                fontSize: '0.875rem',
+                                color: 'var(--text-secondary)'
                             }}>
                                 {getProgressPercentage()}% Complete
-                            </span>
+                            </div>
                         </div>
 
-                        <div className="progress-bar">
-                            <div
-                                className="progress-fill"
-                                style={{ width: `${getProgressPercentage()}%` }}
-                            ></div>
-                        </div>
-
-                        <p style={{
-                            fontSize: '0.875rem',
-                            color: 'var(--text-secondary)',
-                            margin: 0
+                        <div style={{
+                            width: '100%',
+                            height: '8px',
+                            backgroundColor: 'var(--background-color)',
+                            borderRadius: '4px',
+                            overflow: 'hidden'
                         }}>
-                            {Object.values(progress).filter(p => p.completed).length} of {tutorials.length} tutorials completed
-                        </p>
+                            <div style={{
+                                width: `${getProgressPercentage()}%`,
+                                height: '100%',
+                                backgroundColor: 'var(--primary-color)',
+                                transition: 'width 0.3s ease'
+                            }}></div>
+                        </div>
                     </div>
 
                     {isTrainingComplete() && (
@@ -243,7 +237,7 @@ const TutorialList: React.FC<TutorialListProps> = ({ onLogout }) => {
                     </div>
                 </div>
             </div>
-        </PullToRefresh>
+        </>
     )
 }
 
